@@ -12,6 +12,11 @@ function App() {
         <h2>Count by 3</h2>
         <Counter step={3} />
       </section>
+
+      <section>
+        <h2>Count from 20</h2>
+        <Counter start={20} />
+      </section>
     </main>
   )
 }
