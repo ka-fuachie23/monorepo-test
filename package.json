@@ -5,7 +5,9 @@
     "packages/*",
     "apps/*"
   ],
-  "scripts": {},
+  "scripts": {
+    "version": "lerna version --no-git-tag-version -m \":bookmark: publish\""
+  },
   "dependencies": {},
   "devDependencies": {
     "lerna": "^8.1.8"
