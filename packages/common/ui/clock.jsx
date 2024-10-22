@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Clock() {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
