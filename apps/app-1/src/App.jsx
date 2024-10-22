@@ -1,4 +1,4 @@
-import { Counter } from "@test/common/ui"
+import { Clock, Counter } from "@test/common/ui"
 
 function App() {
   return (
@@ -21,6 +21,11 @@ function App() {
       <section>
         <h2>Count from 10 by 15</h2>
         <Counter start={10} step={15} />
+      </section>
+
+      <section>
+        <h2>Clock</h2>
+        <Clock />
       </section>
     </main>
   )
