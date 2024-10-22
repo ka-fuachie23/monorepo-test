@@ -9,6 +9,21 @@ function App() {
       </section>
 
       <section>
+        <h2>Count by 3</h2>
+        <Counter step={3} />
+      </section>
+
+      <section>
+        <h2>Count from 20</h2>
+        <Counter start={20} />
+      </section>
+
+      <section>
+        <h2>Count from 10 by 15</h2>
+        <Counter start={10} step={15} />
+      </section>
+
+      <section>
         <h2>Clock</h2>
         <Clock />
       </section>
