@@ -6,7 +6,7 @@
     "apps/*"
   ],
   "scripts": {
-    "version": "npx lerna version --conventional-commits --changelog-preset conventionalcommits --no-changelog",
+    "version": "npx lerna version --conventional-commits --changelog-preset conventionalcommits --no-changelog"
   },
   "dependencies": {},
   "devDependencies": {
