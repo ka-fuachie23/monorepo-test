@@ -6,7 +6,7 @@
     "apps/*"
   ],
   "scripts": {
-    "version": "lerna version -m \":bookmark: publish\""
+    "version": "npx lerna version --conventional-commits --changelog-preset conventionalcommits --no-changelog",
   },
   "dependencies": {},
   "devDependencies": {
