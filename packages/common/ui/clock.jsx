@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
 
 export default function Clock({ interval = 1000 }) {
-  const [time, setTime] = useState(new Date().toLocaleTimeString());
+  const [date, setDate] = useState(new Date());
 
   useEffect(() => {
     const intervalID = setInterval(() => {
-      setTime(new Date().toLocaleTimeString());
+      setDate(new Date());
     }, interval);
 
     return () => clearInterval(intervalID);
   }, []);
 
-  return <div>{time}</div>;
+  return (
+    <time dateTime={date.toISOString()}>
+      {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+    </time>
+  )
 }
