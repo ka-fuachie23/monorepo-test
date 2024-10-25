@@ -25,7 +25,7 @@ function App() {
 
       <section>
         <h2>Clock</h2>
-        <Clock />
+        <Clock interval={100} />
       </section>
     </main>
   )
