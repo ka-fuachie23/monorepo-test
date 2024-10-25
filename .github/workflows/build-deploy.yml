@@ -28,17 +28,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Install jq if not present
-        run: |
-          if ! command -v jq &> /dev/null; then
-            echo "jq not found, installing..."
-            sudo apt-get update
-            sudo apt-get install -y jq
-          else
-            echo "jq is already installed"
-            jq --version
-          fi
-
       - name: Get release branches and compare
         id: get-changes
         run: |
