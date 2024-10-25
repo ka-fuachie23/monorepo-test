@@ -39,6 +39,7 @@ jobs:
           
           if [ ${#BRANCHES[@]} -eq 0 ]; then
             echo "::warning::No release branches found"
+            echo "changed_packages=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
           
@@ -47,12 +48,47 @@ jobs:
           if [ ${#BRANCHES[@]} -eq 1 ]; then
             # If only one release branch exists, compare against main/master
             echo "Only one release branch found: $LATEST_RELEASE"
+            # First try to get the default branch name
             DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-            yarn lerna ls --since origin/$DEFAULT_BRANCH
+            CHANGED_PACKAGES=$(yarn lerna ls --since origin/$DEFAULT_BRANCH --json || echo "[]")
           else
             # If multiple release branches exist, compare against previous
             PREVIOUS_RELEASE=$(echo "${BRANCHES[1]}" | xargs)
             echo "Latest release: $LATEST_RELEASE"
             echo "Previous release: $PREVIOUS_RELEASE"
-            yarn lerna ls --since "$PREVIOUS_RELEASE"
+            CHANGED_PACKAGES=$(yarn lerna ls --since "$PREVIOUS_RELEASE" --json || echo "[]")
+          fi
+          
+          # Handle empty output from lerna
+          if [ -z "$CHANGED_PACKAGES" ]; then
+            CHANGED_PACKAGES="[]"
+          fi
+          
+          # Ensure we have valid JSON before passing to jq
+          if echo "$CHANGED_PACKAGES" | jq empty 2>/dev/null; then
+            ESCAPED_PACKAGES=$(echo "$CHANGED_PACKAGES" | jq -c .)
+          else
+            ESCAPED_PACKAGES="[]"
+          fi
+          
+          echo "changed_packages=$ESCAPED_PACKAGES" >> $GITHUB_OUTPUT
+          
+          # Also output human-readable format to logs
+          echo "Changed packages:"
+          if [ "$ESCAPED_PACKAGES" != "[]" ]; then
+            echo "$CHANGED_PACKAGES" | jq -r '.[].name'
+          else
+            echo "No changes detected"
+          fi
+
+      - name: Create summary
+        run: |
+          echo "## Package Changes Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.get-changes.outputs.changed_packages }}" == "[]" ]; then
+            echo "No package changes detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Changes detected in the following packages:" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.get-changes.outputs.changed_packages }}" | jq '.' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
           fi
