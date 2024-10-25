@@ -31,8 +31,8 @@ jobs:
       - name: Get release branches and compare
         id: get-changes
         run: |
-          # Get the release branches
-          LATEST_RELEASES=$(git branch -r | grep "origin/release_" | sed 's/origin\///' | sort -rV | head -n 2)
+          # Get the release branches (keeping origin/ prefix for comparison)
+          LATEST_RELEASES=$(git branch -r | grep "origin/release_" | sort -rV | head -n 2)
           
           # Convert to array
           readarray -t BRANCHES <<< "$LATEST_RELEASES"
@@ -92,3 +92,4 @@ jobs:
             echo "${{ steps.get-changes.outputs.changed_packages }}" | jq '.' >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
+
