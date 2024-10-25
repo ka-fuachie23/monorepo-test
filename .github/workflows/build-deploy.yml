@@ -1,0 +1,75 @@
+name: monorepo test build deploy cd
+
+on:
+  push:
+    branches:
+      - "release_**"
+
+jobs:
+  check-changes:
+    name: Check Package Changes
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all branches
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install Yarn
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Get release branches and compare
+        id: get-changes
+        run: |
+          # Get the release branches
+          LATEST_RELEASES=$(git branch -r | grep "origin/release_" | sed 's/origin\///' | sort -rV | head -n 2)
+          
+          # Convert to array
+          readarray -t BRANCHES <<< "$LATEST_RELEASES"
+          
+          if [ ${#BRANCHES[@]} -eq 0 ]; then
+            echo "::warning::No release branches found"
+            echo "changed_packages=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          LATEST_RELEASE=$(echo "${BRANCHES[0]}" | xargs)
+          
+          if [ ${#BRANCHES[@]} -eq 1 ]; then
+            # If only one release branch exists, compare against the branch point
+            echo "Only one release branch found: $LATEST_RELEASE"
+            CHANGED_PACKAGES=$(yarn lerna ls --json)
+          else
+            # If multiple release branches exist, compare against previous
+            PREVIOUS_RELEASE=$(echo "${BRANCHES[1]}" | xargs)
+            echo "Latest release: $LATEST_RELEASE"
+            echo "Previous release: $PREVIOUS_RELEASE"
+            CHANGED_PACKAGES=$(yarn lerna ls --since "$PREVIOUS_RELEASE" --json)
+          fi
+          
+          # Escape potential newlines and special characters for GitHub Actions
+          ESCAPED_PACKAGES=$(echo "$CHANGED_PACKAGES" | jq -c .)
+          
+          echo "changed_packages=$ESCAPED_PACKAGES" >> $GITHUB_OUTPUT
+          
+          # Also output human-readable format to logs
+          echo "Changed packages:"
+          echo "$CHANGED_PACKAGES" | jq -r '.[].name'
+
+      - name: Create summary
+        run: |
+          echo "## Package Changes Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Changes detected in the following packages:" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.get-changes.outputs.changed_packages }}" | jq '.' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
