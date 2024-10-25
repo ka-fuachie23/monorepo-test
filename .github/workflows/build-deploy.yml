@@ -50,7 +50,7 @@ jobs:
             echo "Only one release branch found: $LATEST_RELEASE"
             # First try to get the default branch name
             DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-            CHANGED_PACKAGES=$(yarn lerna ls --since origin/$DEFAULT_BRANCH --all --json || echo "[]")
+            CHANGED_PACKAGES=$(yarn lerna ls --since "origin/$DEFAULT_BRANCH" --all --json || echo "[]")
           else
             # If multiple release branches exist, compare against previous
             PREVIOUS_RELEASE=$(echo "${BRANCHES[1]}" | xargs)
@@ -64,10 +64,22 @@ jobs:
             CHANGED_PACKAGES="[]"
           fi
           
+          # Debug output
+          echo "Raw lerna output:"
+          echo "$CHANGED_PACKAGES"
+          
           # Ensure we have valid JSON before passing to jq
           if echo "$CHANGED_PACKAGES" | jq empty 2>/dev/null; then
             ESCAPED_PACKAGES=$(echo "$CHANGED_PACKAGES" | jq -c .)
+            # Check if the array is empty
+            PACKAGE_COUNT=$(echo "$CHANGED_PACKAGES" | jq '. | length')
+            if [ "$PACKAGE_COUNT" -eq 0 ]; then
+              echo "No changes detected (empty array)"
+            else
+              echo "Found $PACKAGE_COUNT changed packages"
+            fi
           else
+            echo "Invalid JSON output from lerna"
             ESCAPED_PACKAGES="[]"
           fi
           
@@ -84,7 +96,8 @@ jobs:
       - name: Create summary
         run: |
           echo "## Package Changes Summary" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.get-changes.outputs.changed_packages }}" == "[]" ]; then
+          PACKAGE_COUNT=$(echo '${{ steps.get-changes.outputs.changed_packages }}' | jq '. | length')
+          if [ "$PACKAGE_COUNT" -eq 0 ]; then
             echo "No package changes detected" >> $GITHUB_STEP_SUMMARY
           else
             echo "Changes detected in the following packages:" >> $GITHUB_STEP_SUMMARY
@@ -92,4 +105,3 @@ jobs:
             echo "${{ steps.get-changes.outputs.changed_packages }}" | jq '.' >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
-
