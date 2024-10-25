@@ -50,13 +50,13 @@ jobs:
             echo "Only one release branch found: $LATEST_RELEASE"
             # First try to get the default branch name
             DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-            CHANGED_PACKAGES=$(yarn lerna ls --since origin/$DEFAULT_BRANCH --json || echo "[]")
+            CHANGED_PACKAGES=$(yarn lerna ls --since origin/$DEFAULT_BRANCH --all --json || echo "[]")
           else
             # If multiple release branches exist, compare against previous
             PREVIOUS_RELEASE=$(echo "${BRANCHES[1]}" | xargs)
             echo "Latest release: $LATEST_RELEASE"
             echo "Previous release: $PREVIOUS_RELEASE"
-            CHANGED_PACKAGES=$(yarn lerna ls --since "$PREVIOUS_RELEASE" --json || echo "[]")
+            CHANGED_PACKAGES=$(yarn lerna ls --since "$PREVIOUS_RELEASE" --all --json || echo "[]")
           fi
           
           # Handle empty output from lerna
